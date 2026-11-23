@@ -47,7 +47,7 @@ function getDiff(a, b, oldData, newData) {
 }
 
 e.getAuditPreSaveHook = (collectionName)=> {
-    return function(next, req){
+    return async function(req){
         if(req){
             let data = {};
             data.user = null
@@ -59,19 +59,10 @@ e.getAuditPreSaveHook = (collectionName)=> {
             data.timestamp = new Date();
             data.data = {};
             if(this._id){
-                mongoose.connection.db.collection(collectionName).findOne({_id: this._id})
-                .then(doc => {
-                    data.data.old = doc ? doc : null;
-                    this._auditData = data;
-                    next();
-                });
-            }else{
-                this._auditData = data;
-                next();
+                const doc = await mongoose.connection.db.collection(collectionName).findOne({_id: this._id});
+                data.data.old = doc ? doc : null;
             }
-        }
-        else{
-            next();
+            this._auditData = data;
         }
     };
 };
@@ -106,8 +97,9 @@ e.getAuditPostSaveHook = (collectionName,client,queueName)=>{
     };
 };
 
+// Register with schema.pre('deleteOne', { document: true, query: false }, ...)
 e.getAuditPreRemoveHook = ()=>{
-    return function(next, req){
+    return function(doc, req){
         if(req){
             let data = {};
             data.user = null
@@ -128,7 +120,6 @@ e.getAuditPreRemoveHook = ()=>{
             data._metadata.deleted = false;
             this._auditData = data;
         }
-        next();
     };
 };
 

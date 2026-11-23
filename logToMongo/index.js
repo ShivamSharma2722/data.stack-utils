@@ -13,7 +13,7 @@ function logToMongo(name) {
                 next();
                 return;
             }
-            mongoDB.insert({
+            mongoDB.insertOne({
                 name: name,
                 url: req.originalUrl,
                 method: req.method,
